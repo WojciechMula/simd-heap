@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "is_heap_scalar.h"
+#include "is_heap_sse.cpp"
 
 using Type = int32_t;
 
@@ -13,7 +14,6 @@ namespace {
 }
 
 class Application {
-
 
     std::vector<size_t> test_sizes;
     std::vector<Type> heap;
@@ -43,6 +43,7 @@ public:
 
                 const bool reference = std::is_heap(heap.cbegin(), heap.cend());
                 ok = test("is_heap_fwd", is_heap_fwd_wrapper, reference) and ok;
+                ok = test("SSE",         is_heap_sse_epi32, reference) and ok;
             }
 
             if (ok)
@@ -59,7 +60,7 @@ private:
     bool test(const std::string& name, Function function, bool reference) const {
         const bool result = function(heap.data(), heap.data() + heap.size());
         if (result != reference) {
-            printf("%s failed\n", name.c_str());
+            printf("%s failed: result=%d reference=%d\n", name.c_str(), result, reference);
             return false;
         }
         else {
