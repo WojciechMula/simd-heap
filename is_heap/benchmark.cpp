@@ -13,6 +13,10 @@ namespace {
     bool is_heap_std_wrapper(const Type* begin, const Type* end) {
         return std::is_heap(begin, end);
     }
+
+    bool is_heap_fwd_wrapper(const Type* begin, const Type* end) {
+        return is_heap_fwd(begin, end, std::less<Type>());
+    }
 }
 
 class Application {
@@ -32,8 +36,9 @@ public:
             printf("Input size %lu\n", size);
             prepare_input_data(size);
 
-            benchmark("std::is_heap", is_heap_std_wrapper);
-            benchmark("SSE", is_heap_sse_epi32);
+            benchmark("std",        is_heap_std_wrapper);
+            benchmark("fwd scalar", is_heap_fwd_wrapper);
+            benchmark("fwd SSE",    is_heap_sse_epi32);
         }
 
         return true;
