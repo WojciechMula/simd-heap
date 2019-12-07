@@ -20,7 +20,7 @@ namespace {
 
 class Application {
 
-    const size_t size = 65536;
+    const size_t size = 65535;
     const size_t valid_heap_size = 32768 + 1;
     std::vector<Type> heap;
 
