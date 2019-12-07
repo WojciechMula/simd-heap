@@ -6,5 +6,11 @@ DEPS=push_heap.h \
 test: validate
 	./validate
 
+bench: benchmark
+	./benchmark
+
 validate: validate.cpp $(DEPS)
 	$(CXX) $(FLAGS) validate.cpp -o $@
+
+benchmark: benchmark.cpp $(DEPS)
+	$(CXX) $(FLAGS) benchmark.cpp -o $@
