@@ -9,15 +9,18 @@
 
 using Type = int32_t;
 
-namespace {
-    bool is_heap_std_wrapper(const Type* begin, const Type* end) {
-        return std::is_heap(begin, end);
-    }
-
-    bool is_heap_fwd_wrapper(const Type* begin, const Type* end) {
-        return is_heap_fwd(begin, end, std::less<Type>());
-    }
+bool is_heap_std_wrapper(const Type* begin, const Type* end) {
+    return std::is_heap(begin, end);
 }
+
+bool is_heap_fwd_wrapper(const Type* begin, const Type* end) {
+    return is_heap_fwd(begin, end, std::less<Type>());
+}
+
+bool is_heap_rnd_wrapper(const Type* begin, const Type* end) {
+    return is_heap_rnd(begin, end, std::less<Type>());
+}
+
 
 class Application {
 
@@ -38,6 +41,7 @@ public:
 
             benchmark("std",        is_heap_std_wrapper);
             benchmark("fwd scalar", is_heap_fwd_wrapper);
+            benchmark("rnd scalar", is_heap_rnd_wrapper);
             benchmark("fwd SSE",    is_heap_sse_epi32);
         }
 
