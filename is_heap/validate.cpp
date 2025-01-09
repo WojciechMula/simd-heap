@@ -4,10 +4,10 @@
 
 #include "is_heap_scalar.h"
 #include "is_heap_sse.cpp"
+#include "is_heap_avx2.cpp"
 
 using Type = int32_t;
 
-namespace {
     bool is_heap_fwd_wrapper(const Type* begin, const Type* end) {
         return is_heap_fwd(begin, end, std::less<Type>());
     }
@@ -15,7 +15,6 @@ namespace {
     bool is_heap_rnd_wrapper(const Type* begin, const Type* end) {
         return is_heap_rnd(begin, end, std::less<Type>());
     }
-}
 
 class Application {
 
@@ -39,7 +38,7 @@ public:
             const bool reference = std::is_heap(heap.cbegin(), heap.cend());
             ok = test("is_heap_fwd", is_heap_fwd_wrapper, reference) and ok;
 
-            // test non-heap sequcnes
+            // test non-heap sequences
             auto copy = heap;
             for (size_t i=0; i < size; i++) {
                 heap = copy;
@@ -49,6 +48,7 @@ public:
                 ok = test("is_heap_fwd", is_heap_fwd_wrapper, reference) and ok;
                 ok = test("is_heap_rnd", is_heap_rnd_wrapper, reference) and ok;
                 ok = test("SSE",         is_heap_sse_epi32, reference) and ok;
+                ok = test("AVX2",        is_heap_avx2_epi32, reference) and ok;
             }
 
             if (ok)

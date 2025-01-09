@@ -12,7 +12,6 @@ bool is_heap_sse_epi32(const int32_t* begin, const int32_t* end) {
 
     while (end - current >= 2 * k) {
         // 1. load parents
-        
         // tmp = [p3|p2|p1|p0]
         const __m128i tmp = _mm_loadu_si128((const __m128i*)parent);
         // p0  = [p1|p1|p0|p0]

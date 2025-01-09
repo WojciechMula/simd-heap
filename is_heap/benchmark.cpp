@@ -6,6 +6,7 @@
 
 #include "is_heap_scalar.h"
 #include "is_heap_sse.cpp"
+#include "is_heap_avx2.cpp"
 
 using Type = int32_t;
 
@@ -43,6 +44,7 @@ public:
             benchmark("fwd scalar", is_heap_fwd_wrapper);
             benchmark("rnd scalar", is_heap_rnd_wrapper);
             benchmark("fwd SSE",    is_heap_sse_epi32);
+            benchmark("fwd AVX2",   is_heap_avx2_epi32);
         }
 
         return true;
