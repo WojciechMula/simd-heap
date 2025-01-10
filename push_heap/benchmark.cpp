@@ -4,20 +4,26 @@
 #include <cstdint>
 
 #include "benchmark.h"
-
 #include "push_heap.h"
-#include "push_heap_avx512.h"
+
+#ifdef HAVE_AVX2
+#   include "push_heap_avx2.h"
+#endif
+
+#ifdef HAVE_AVX512
+#   include "push_heap_avx512.h"
+#endif
 
 
-using Type = uint32_t;
+using Type = int32_t;
 
 namespace {
-    void push_heap_std_wrapper(Type* start, Type* end) {
-        std::push_heap(start, end);
+    void push_heap_std_wrapper(Type* start, size_t size) {
+        std::push_heap(start, start + size);
     }
 
-    void push_heap_scalar_wrapper(Type* start, Type* end) {
-        push_heap_scalar(start, end, std::less<Type>());
+    void push_heap_scalar_wrapper(Type* start, size_t size) {
+        push_heap_scalar(start, start + size, std::less<Type>());
     }
 }
 
@@ -26,12 +32,17 @@ class Application {
     const size_t repeat = 1000;
 
     const size_t size = 65535;
-    const size_t valid_heap_size = 32768 + 1;
+    const size_t valid_heap_size = 256;
     std::vector<Type> heap;
 
 public:
     Application() {
+#ifdef HAVE_AVX2
+        push_heap_avx2_setup();
+#endif
+#ifdef HAVE_AVX512
         push_heap_avx512_setup();
+#endif
     }
 
     bool run() {
@@ -44,8 +55,15 @@ public:
         heap = input_data;
         benchmark("scalar push_heap", push_heap_scalar_wrapper);
 
+#ifdef HAVE_AVX2
+        heap = input_data;
+        benchmark("AVX2 push_heap", push_heap_avx2);
+#endif
+
+#ifdef HAVE_AVX512
         heap = input_data;
         benchmark("AVX512 push_heap", push_heap_avx512);
+#endif
 
         return true;
     }
@@ -56,7 +74,7 @@ private:
 
         auto wrapper = [this, function]() {
             for (size_t i=valid_heap_size; i <= heap.size(); i++)
-                function(heap.data(), heap.data() + i);
+                function(heap.data(), i);
         };
 
         BEST_TIME(/**/, wrapper(), name.c_str(), repeat, valid_heap_size);
