@@ -88,7 +88,7 @@ private:
         std::mt19937 eng(rd());
         eng.seed(0);
 
-        std::uniform_int_distribution<Type> random(0, 0xffffffff);
+        std::uniform_int_distribution<Type> random(0, 0x7fffffff);
 
         std::vector<Type> heap;
         heap.reserve(size);
