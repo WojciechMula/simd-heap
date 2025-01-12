@@ -1,6 +1,5 @@
 #include <vector>
 #include <algorithm>
-#include <random>
 #include <cstdint>
 #include <cstdio>
 #include <cassert>
@@ -75,24 +74,70 @@ void reference(vec& v, size_t count) {
     }
 }
 
-void avx2(vec& v, size_t count) {
-    size_t off = 0;
-    for (size_t i=0; i < count; i++, off += 8) {
-        make_heap_7(&v[off]);
-        break; // XXX
+ssize_t pop_heap_step(int32_t* v, ssize_t index) {
+    const ssize_t child1 = 2*index + 1;
+    const ssize_t child2 = 2*index + 2;
+
+    const ssize_t initial = index;
+    if (v[index] < v[child1]) {
+        index = child1;
+    }
+
+    if (v[index] < v[child2]) {
+        index = child2;
+    }
+
+    if (index != initial) {
+        const int32_t tmp = v[index];
+        v[index] = v[initial];
+        v[initial] = tmp;
+        return index;
+    }
+
+    return -1;
+}
+
+void make_heap_7(int32_t* arr) {
+    const ssize_t index = pop_heap_step(arr, 0);
+    if (index >= 0) {
+        pop_heap_step(arr, index);
     }
 }
 
-int main() {
-    if (0) {
-    vec v = {1, 4, 7, 2, 3, 6, 5, 1};
-    dump(v.data(), v.size());
-    std::pop_heap(v.begin(), v.end());
-    dump(v.data(), v.size());
+void scalar(vec& v, size_t count) {
+    size_t off = 0;
+    for (size_t i=0; i < count; i++, off += 8) {
+        make_heap_7(&v[off]);
+    }
+}
 
-    return 0;
+void avx2(vec& v, size_t count) {
+    size_t off = 0;
+    for (size_t i=0; i < count; i++, off += 8) {
+        avx2_make_heap_7(&v[off]);
+    }
+}
+
+bool compare(const char* name, const std::vector<vec>& all, const vec& want, const vec& got) {
+    const size_t n = all.size();
+
+    for (size_t i=0; i < n; i++) {
+        const size_t ofs = i * 8;
+        for (size_t j=0; j < 7; j++) {
+            if (got[ofs + j] != want[ofs + j]) {
+                printf("%s: case %ld\n", name, i);
+                printf("input = "); dump(&all[i][0], 8);
+                printf("want  = "); dump(&want[ofs], 7);
+                printf("got   = "); dump(&got[ofs], 7);
+                return false;
+            }
+        }
     }
 
+    return true;
+}
+
+int main() {
     vec prefix;
     vec elems = {1, 2, 3, 4, 5, 6, 7};
     std::vector<vec> all;
@@ -113,19 +158,22 @@ int main() {
     vec want = input;
     reference(want, n);
 
-    vec got = input;
-    avx2(got, n);
-
-    for (size_t i=0; i < n; i++) {
-        const size_t ofs = i * 8;
-        for (size_t j=0; j < 7; j++) {
-            if (got[ofs + j] != want[ofs + j]) {
-                printf("case %ld\n", i);
-                printf("input = "); dump(&all[i][0], 8);
-                printf("want  = "); dump(&want[ofs], 7);
-                printf("got   = "); dump(&got[ofs], 7);
-                return EXIT_FAILURE;
-            }
+    {
+        vec got = input;
+        avx2(got, n);
+        if (not compare("avx2", all, want, got)) {
+            return EXIT_FAILURE;
         }
     }
+
+    {
+        vec got = input;
+        scalar(got, n);
+        if (not compare("scalar", all, want, got)) {
+            return EXIT_FAILURE;
+        }
+    }
+
+    puts("All OK");
+    return EXIT_SUCCESS;
 }

@@ -1,12 +1,10 @@
 #include <immintrin.h>
 
-#include "avx2-dump.h"
-
 uint32_t heap_7_shuffle[512][8] = {
-#include "1"
+#include "avx2.inl.cpp"
 };
 
-void make_heap_7(int32_t* arr) {
+void avx2_make_heap_7(int32_t* arr) {
     // 1. load 7 initial elements of heaps
     //    [a][b c][d e f g]
     const __m256i head = _mm256_loadu_si256((const __m256i*)arr);
@@ -37,13 +35,7 @@ void make_heap_7(int32_t* arr) {
     const unsigned ab_lt   = arr[a] < arr[b];
     const __m256i lt_mask  = _mm256_cmpgt_epi32(ccdeefgg, abaadaaf);
 
-    dump_epi32(head);
-    dump_epi32(abaadaaf);
-    dump_epi32(ccdeefgg);
-    dump_epi32(lt_mask);
-
-    //const unsigned id = (_mm256_movemask_ps(_mm256_castsi256_ps(lt_mask)) << 1) | ab_lt;
-    const unsigned id = _mm256_movemask_ps(_mm256_castsi256_ps(lt_mask)) | (ab_lt << 8);
+    const unsigned id = (_mm256_movemask_ps(_mm256_castsi256_ps(lt_mask)) << 1) | ab_lt;
 
     const __m256i pattern  = _mm256_load_si256((const __m256i*)&heap_7_shuffle[id]);
     const __m256i shuffled = _mm256_permutevar8x32_epi32(head, pattern);
